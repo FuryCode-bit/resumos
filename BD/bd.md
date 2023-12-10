@@ -595,7 +595,7 @@ where e.Dificuldade
 			from Evento e)
 
 46.
-
+ ```
 Select E.IDE
 From Evento E
 Where IDE IN (select IDE
@@ -610,9 +610,9 @@ Where IDE IN (select IDE
 					                 From Percurso P
 					  			     Group By IDE
 					                 Having Count(Distinct IDL) >= 5)) As X)
-
+ ```
 47.
-
+ ```
 select distinct c.Nome from Participacao p, Ciclista c 
 	where p.idc = c.idc and ide in (
 		Select E.IDE
@@ -629,9 +629,9 @@ Where IDE IN (select IDE
 					                 From Percurso P
 					  			     Group By IDE
 					                 Having Count(Distinct IDL) >= 5)) As X))
-
+ ```
 48.
-
+ ```
 Select Nome
 From (Select Distinct Nome, Idade
 	From Ciclista C, Participacao P
@@ -674,9 +674,9 @@ Where Idade =  (Select Min(Idade)
 									)) As Z
 				)
 
-
+ ```
 49.
-
+ ```
 Select Marca, Modelo
 From Bicicleta B, Fabricante F,
     (Select Distinct Nome, Idade, IDB
@@ -721,7 +721,7 @@ Where Y.IDB = B.IDB
 															)
 									)) As Z
 				)
-
+ ```
 **Folha Empregados:**
 
 1. SELECT * FROM Empregado
