@@ -294,3 +294,482 @@ A normalização de uma relação é obtida pela sua decomposição em duas ou m
 * **Forma Normal de Boyce-Codd** - seja `R(A_1, A_2, ..., A_n)`, `R` está na forma normal de Boyce-Codd se, para qualquer dependência funcional `X → Y` (não trivial), `X` e `Y` conjuntos de atributos de `R`, `X` é chave candidaaa de `R`, ou seja, se todo o determinante da relação for uma chave candidata. A forma normal de Boyce-Codd só é diferente da terceira forma normal se a relação tem mais do que uma chave. Se uma relação está na forma normal de Boyce-Codd, está na terceira forma normal.
 
 As dependências funcionais representam restrições de integridade e, portanto, devem ser mantidas nas relações resultantes da decomposição. Seja `R` um esquema de relação que é decomposto em dois esquemas de relação com conjuntos de atributos `X` e `Y` e seja `F` um conjunto de dependências funcionais em `R`. A **projeção de `F` sobre `X` é o conjunto de dependências funcionais no fecho `F+` que contém apenas atributos em `X - Fx`. Uma dependência funcional `U → V` em `F+` só pertence a `Fx` se todos os atributos em `U` e `V` pertencem a `X`. A decomposição da relação `R` com dependências funcionais `F` em esquemas de relação com conjuntos `X` e `Y` preserva as dependências se `(Fx ∪ Fy)+ = F+`, ou seja, se se tomarem as dependências em `Fx` e `Fy` e se calcular o fecho da sua união se obtêm todas as dependências do fecho de `F`. Uma aplicação direta da definição dá um algoritmo direto para testar quando é que uma decomposição preserva as dependências funcionais.
+
+## Prática
+
+### Folha 1
+
+1.
+
+select * from Ciclista
+
+2.
+
+select Nome, Genero DATEDIFF(21, Data_nascimento,GETDATE()) from Ciclista
+
+3.
+
+select Nome, Genero, DATEDIFF(YEAR, Data_nascimento,GETDATE()) as Idade from TblCiclista where Genero = 'M'
+
+
+4.
+
+select Nome, Genero, DATEDIFF(YEAR, Data_nascimento,GETDATE()) as Idade from TblCiclista where Genero = 'M' AND DATEDIFF(YEAR, Data_nascimento,GETDATE()) > 50 AND DATEDIFF(YEAR, Data_nascimento,GETDATE()) < 70
+
+5.
+
+select Nome, Genero, DATEDIFF(YEAR, Data_nascimento,GETDATE()) as Idade from TblCiclista where DATEDIFF(YEAR, Data_nascimento,GETDATE()) < 25 AND DATEDIFF(YEAR, Data_nascimento,GETDATE()) > 75
+
+6.
+
+select Nome, Genero, DATEDIFF(YEAR, Data_nascimento,GETDATE()) as Idade from TblCiclista where Nome like 'José%' 
+
+7.
+
+select Nome, Genero, DATEDIFF(YEAR, Data_nascimento,GETDATE()) as Idade from TblCiclista where Nome like '%José%' 
+
+8.
+
+select Distinct Nome_local from TblLugar
+
+9.
+
+select Nome_local from TblLugar
+
+10.
+
+select Ciclista.*, TblLugar.Nome_Local from Ciclista, TblLugar where Ciclista.IDL_Residencia = TblLugar.IDL
+
+11.
+
+Select C.*, L.Nome_Local, L.Info, L.X, L.Y, L.Elevacao
+From Ciclista C, Lugar L
+Where C.IDL_Residencia = L.IDL
+
+(N percebo porque existe duplicação do IDL)
+
+12. 
+
+Select C.*, L.Nome_Local, L.Info, L.X, L.Y, L.Elevacao
+From Ciclista C
+Inner Join Lugar L
+on C.IDL_Residencia = L.IDL
+
+13.
+
+Select l.IDL, l.Nome_Local, c.Nome
+from Lugar as l
+Left Join Ciclista as c on l.Idl = c.IDL_Residencia
+
+14.
+
+select c.IDC, c.Nome, e.Nome_Evento, o.Funcao 
+from Ciclista c, Evento e, Organizacao o 
+where c.IDC = o.IDC and e.IDE = o.IDE and (o.Funcao = 'Organizador' or o.Funcao = 'coordenador')
+
+15.
+
+select distinct o1.IDC from Organizacao o1, Organizacao o2 
+where o1.idc = o2.idc 
+And O1.Funcao = 'Coordenador' AND O2.Funcao = 'Organizador'
+
+16.
+
+Select IDC
+From Organizacao 
+Where Funcao = 'Coordenador'
+except
+	(Select IDC
+	From Organizacao 
+	Where Funcao = 'Coordenador'
+	intersect 
+		Select IDC
+		From Organizacao 
+		Where Funcao = 'Organizador')
+
+17.
+
+Select Distinct C.Nome
+From Participacao P1, Participacao P2, Ciclista C
+Where P1.IDC = P2.IDC  -- mesmo ciclista
+  And P1.IDE <> P2.IDE -- eventos diferentes
+  And P1.IDC = C.IDC   -- nome do ciclista
+
+
+Select c.nome, count(*) as contagem
+From Participacao p, Ciclista c where p.idc = c.idc group by c.nome, p.idc
+HAVING COUNT(*) >= 2
+
+18.
+
+select distinct c.Nome
+from Ciclista c, Bicicleta b, Participacao p1, Participacao p2, Evento e
+Where c.idc = p1.IDC and b.IDB = p1.IDB and e.IDE = p1.IDE and p1.idc = p2.idc and p1.ide <> p2.ide
+
+19.
+
+Select distinct C.Nome
+From Participacao P, Ciclista C
+Where P.IDC = C.IDC 
+and NOT Exists (select ide from Participacao where IDC = C.IDC and IDB <> P.IDB)
+
+20.
+
+Select distinct B.IDB, Modelo
+From Bicicleta B, Participacao P1, Participacao P2
+Where B.IDB = P1.IDB
+  and B.IDB = P2.IDB
+  and P1.IDC <> P2.IDC
+
+22.
+
+Select distinct C.Nome
+From Ciclista C, Organizacao o
+Where c.idc = o.IDC and o.funcao = 'Organizador' and c.idc not in 
+(select idc from Participacao where IDE = O.IDE)
+
+28.
+
+select count(*) from Bicicleta b, Fabricante f where b.idf = f.idf and f.Marca = 'Orbita'
+
+29.
+
+select 
+MIN(b.preco) as precoMin, 
+MAX(b.preco) as precoMax, 
+AVG(b.preco) as precoAVG 
+from Bicicleta b, Fabricante f 
+where b.idf = f.idf 
+and f.Marca = 'Orbita'
+
+30.
+
+select AVG(c.idade)
+from Ciclista c, Bicicleta b, Fabricante f 
+where b.idf = f.idf and b.idc = c.idc
+and f.Marca = 'Orbita'
+
+31.
+
+select count(*)
+from Ciclista c, Bicicleta b, Fabricante f 
+where b.idf = f.idf and b.idc = c.idc
+and f.Marca = 'Orbita' and c.Genero = 'F'
+
+32.
+
+select count(*), AVG(e.Distancia) from Evento e where e.Tipo_Evento = 'Passeio'
+
+33.
+
+select 
+MIN(b.preco) as precoMin
+from Bicicleta b, Fabricante f 
+where b.idf = f.idf 
+and f.Marca = 'Orbita'
+
+34.
+
+select c.idc from Ciclista c 
+where c.idc in (
+		select 
+		b.idc
+		from Bicicleta b, Fabricante f 
+		where b.idf = f.idf 
+		and f.Marca = 'Orbita' 
+		and preco = (Select MIN(Preco)
+					From Fabricante F, Bicicleta B
+						Where Marca = 'Orbita'
+						And B.IDF = F.IDF))
+
+35.
+
+select distinct c.Nome from Participacao p, Ciclista c 
+where p.idc = c.idc 
+and p.IDB in 
+(select 
+	b.idb
+	from Bicicleta b, Fabricante f 
+		where b.idf = f.idf 
+		and f.Marca = 'Orbita' 
+		and preco = (Select MIN(Preco)
+					From Fabricante F, Bicicleta B
+						Where Marca = 'Orbita'
+						And B.IDF = F.IDF))
+
+36.
+
+select distinct e.Nome_evento from Participacao p, Evento e
+where p.IDB in 
+(select 
+	b.idb
+	from Bicicleta b, Fabricante f 
+		where b.idf = f.idf 
+		and f.Marca = 'Orbita' 
+		and preco = (Select MIN(Preco)
+					From Fabricante F, Bicicleta B
+						Where Marca = 'Orbita'
+						And B.IDF = F.IDF))
+
+37.
+
+Select *
+from Evento E
+Where (Select IDL
+       From Percurso
+	   Where IDE = E.IDE
+	     And Ordem = (Select MAX (Ordem)
+		              From Percurso
+					  Where IDE = E.IDE)
+	   )
+	   =
+      (Select IDL
+       From Percurso
+	   Where IDE = E.IDE
+	     And Ordem = (Select MIN (Ordem)
+		              From Percurso
+					  Where IDE = E.IDE)
+       )
+
+38.
+
+Select *
+from Evento E
+where (Select Count(DISTINCT IDL)
+       From Percurso
+	   Where E.IDE = IDE)  > 5
+
+39.
+
+Select IDE, Count(*) as numeroLocais
+From Percurso
+Group By IDE
+
+40.
+
+Select IDE, Count(Distinct IDL) as numeroLocais
+From Percurso
+Group By IDE
+
+41.
+
+select p.ide, 
+count(p.idc) as NPart,
+SUM(p.valor_inscricao) as ValorTotal
+from Participacao p group by ide
+order by ValorTotal desc
+
+42.
+
+select p.ide, 
+count(p.idc) as NPart,
+SUM(p.valor_inscricao) as ValorTotal
+from Participacao p group by ide
+having count(p.idc) > 5
+order by ValorTotal desc
+
+43.
+
+select p.ide, 
+count(p.idc) as NPart,
+SUM(p.valor_inscricao) as ValorTotal
+from Participacao p group by ide
+having count(p.idc) > 5 and SUM(p.valor_inscricao) > 100
+order by ValorTotal desc
+
+44.
+
+select c.Nome from Ciclista c 
+where idc = 
+	(select b.idc 
+		from Bicicleta b 
+		group by b.idc 
+		having count(*) > 3)
+
+45.
+
+select e.IDE 
+from Evento e 
+where e.Dificuldade 
+	in (select Max(e.dificuldade) 
+			from Evento e)
+
+46.
+
+Select E.IDE
+From Evento E
+Where IDE IN (select IDE
+              from Percurso P
+              Group By IDE
+              Having Count(Distinct IDL) >= 5)
+
+  and E.Dificuldade = (Select MAX(Dificuldade)
+                       From (Select E.IDE,  Dificuldade
+                       From Evento E
+					   Where IDE IN (Select IDE 
+					                 From Percurso P
+					  			     Group By IDE
+					                 Having Count(Distinct IDL) >= 5)) As X)
+
+47.
+
+select distinct c.Nome from Participacao p, Ciclista c 
+	where p.idc = c.idc and ide in (
+		Select E.IDE
+From Evento E
+Where IDE IN (select IDE
+              from Percurso P
+              Group By IDE
+              Having Count(Distinct IDL) >= 5)
+
+  and E.Dificuldade = (Select MAX(Dificuldade)
+                       From (Select E.IDE,  Dificuldade
+                       From Evento E
+					   Where IDE IN (Select IDE 
+					                 From Percurso P
+					  			     Group By IDE
+					                 Having Count(Distinct IDL) >= 5)) As X))
+
+48.
+
+Select Nome
+From (Select Distinct Nome, Idade
+	From Ciclista C, Participacao P
+	Where C.IDC = P.IDC
+		and P.IDE IN (Select E.IDE
+					From Evento E
+					Where IDE IN (select IDE
+									from Percurso P
+									Group By IDE
+									Having Count(Distinct IDL) >= 5)
+
+						and E.Dificuldade = (Select MAX(Dificuldade)
+											From (Select E.IDE,  Dificuldade
+											From Evento E
+											Where IDE IN (Select IDE 
+															From Percurso P
+					  										Group By IDE
+															Having Count(Distinct IDL) >= 5)) As X
+											)
+					)) As Y
+Where Idade =  (Select Min(Idade)
+				From (Select Distinct Nome, Idade
+					From Ciclista C, Participacao P
+					Where C.IDC = P.IDC
+						and P.IDE IN (Select E.IDE
+									From Evento E
+									Where IDE IN (select IDE
+													from Percurso P
+													Group By IDE
+													Having Count(Distinct IDL) >= 5)
+
+										and E.Dificuldade = (Select MAX(Dificuldade)
+															From (Select E.IDE,  Dificuldade
+															From Evento E
+															Where IDE IN (Select IDE 
+																			From Percurso P
+					  														Group By IDE
+																			Having Count(Distinct IDL) >= 5)) As X
+															)
+									)) As Z
+				)
+
+
+49.
+
+Select Marca, Modelo
+From Bicicleta B, Fabricante F,
+    (Select Distinct Nome, Idade, IDB
+	From Ciclista C, Participacao P
+	Where C.IDC = P.IDC
+		and P.IDE IN (Select E.IDE
+					From Evento E
+					Where IDE IN (select IDE
+									from Percurso P
+									Group By IDE
+									Having Count(Distinct IDL) >= 5)
+
+						and E.Dificuldade = (Select MAX(Dificuldade)
+											From (Select E.IDE,  Dificuldade
+											From Evento E
+											Where IDE IN (Select IDE 
+															From Percurso P
+					  										Group By IDE
+															Having Count(Distinct IDL) >= 5)) As X
+											)
+					)) As Y
+Where Y.IDB = B.IDB
+  and F.IDF = B.IDF
+  and Idade =  (Select Min(Idade)
+				From (Select Distinct Nome, Idade
+					From Ciclista C, Participacao P
+					Where C.IDC = P.IDC
+						and P.IDE IN (Select E.IDE
+									From Evento E
+									Where IDE IN (select IDE
+													from Percurso P
+													Group By IDE
+													Having Count(Distinct IDL) >= 5)
+
+										and E.Dificuldade = (Select MAX(Dificuldade)
+															From (Select E.IDE,  Dificuldade
+															From Evento E
+															Where IDE IN (Select IDE 
+																			From Percurso P
+					  														Group By IDE
+																			Having Count(Distinct IDL) >= 5)) As X
+															)
+									)) As Z
+				)
+
+**Folha Empregados:**
+
+1. SELECT * FROM Empregado
+2. SELECT * FROM Empregado WHERE Categoria = 'Artista'
+3. SELECT Nome, Categoria FROM Empregado
+4. a) SELECT Nome FROM Empregado WHERE Salario >= 150000 AND DepNum = 1
+   b) SELECT Nome FROM Empregado WHERE Salario BETWEEN 250000 AND 300000
+5. SELECT * FROM Empregado WHERE Categoria LIKE 'A%'
+6. SELECT * FROM Empregado WHERE DepNum LIKE '1'
+7. SELECT DISTINCT Nome, Categoria FROM Empregado
+8. SELECT DepNum FROM Empregado WHERE Nome = ALL (SELECT Nome FROM Empregado WHERE DepNum = 2)
+9. SELECT * FROM Empregado, Departamento
+10. SELECT Empregado.*, Departamento.Nome, Departamento.Local FROM Empregado, Departamento WHERE Empregado.DepNum = Departamento.DepNum
+11. SELECT Empregado.*, Departamento.Local, Departamento.Nome FROM Empregado INNER JOIN Departamento ON Empregado.DepNum = Departamento.DepNum
+12. INSERT INTO Departamento (DepNum, Nome, Local) VALUES (5, 'Vendas', 'Covilha')
+    SELECT Departamento.*, Empregado.EmpNum, Empregado.Nome, Empregado.Categoria, Empregado.Salario FROM Departamento LEFT JOIN Empregado ON Departamento.DepNum = Empregado.DepNum
+13. SELECT EmpNum FROM Atribuicao WHERE Funcao = 'Coordenador' OR Funcao = 'Colaborador'
+14. SELECT EmpNum FROM Atribuicao WHERE Funcao = 'Colaborador' INTERSECT SELECT EmpNum FROM Atribuicao WHERE Funcao = 'Coordenador'
+15. SELECT EmpNum FROM Atribuicao WHERE Funcao = 'Coordenador' EXCEPT SELECT EmpNum FROM Atribuicao WHERE Funcao != 'Coordenador'
+16.
+17. SELECT Designacao FROM Projecto WHERE ProjNum IN (SELECT ProjNum FROM Atribuicao WHERE EmpNum IN (SELECT EmpNum FROM Empregado WHERE DepNum IN (SELECT DepNum FROM Departamento WHERE Departamento.Local IN (SELECT Departamento.Local FROM Departamento GROUP BY Departamento.Local HAVING COUNT (Departamento.Local) = 1))))
+18. SELECT Nome FROM Empregado INNER JOIN Atribuicao ON Empregado.EmpNum = Atribuicao.EmpNum GROUP BY Empregado.Nome HAVING COUNT(*) >= 2
+19. SELECT COUNT(*) AS NumeroEmpregados FROM Empregado
+20. SELECT COUNT(*) AS EmpregadosDepartamento1 FROM Empregado WHERE DepNum = 1
+21. SELECT COUNT(*) AS EmpregadosCovilha FROM Empregado JOIN Departamento ON Empregado.DepNum = Departamento.DepNum WEHRE Departamento.Local LIKE 'Covilha'
+22. SELECT Departamento.Nome FROM Departamento WHERE NOT EXISTS (SELECT * FROM Empregado WHERE Empregado.DepNum = Departamento.DepNum)
+23. SELECT SUM(Salario) AS SalariosDepartamento1 FROM Empregado WHERE Empregado.DepNum = 1
+24. SELECT SUM(Salario) FROM Empregado WHERE EmpNum IN (SELECT EmpNum FROM Atribuicao WHERE ProjNum = 1)
+25. SELECT COUNT(DISTINCT Categoria) FROM Empregado
+26. SELECT MAX(Salario) FROM Empregado
+27. SELECT Nome FROM Empregado WHERE Salario = (SELECT MIN(Salario) FROM Empregado)
+28. SELECT AVG(Salario) AS SalarioMedio FROM Empregado WHERE Empregado.DepNum = 1
+29. SELECT Designacao FROM Projecto WHERE Fundos = (SELECT MAX(Fundos) FROM Projecto)
+30. SELECT Nome FROM Empregado WHERE EmpNum IN (SELECT EmpNum FROM Atribuicao WHERE ProjNum IN (SELECT ProjNum FROM Projecto WHERE Fundos = (SELECT MAX(Fundos) FROM Projecto)))
+31. SELECT Nome, DepNum, Salario FROM Empregado WHERE Salario > (SELECT AVG(Salario) FROM Empregado)
+32. SELECT DepNum, COUNT(*) AS NumeroEmpregados FROM Empregado GROUP BY DepNum
+33. SELECT DepNum, COUNT(*) AS Programadores FROM Empregado WHERE Categoria = 'Programador' GROUP BY DepNum
+34. SELECT Departamento.Nome, COUNT(Empregado.EmpNum) FROM Empregado INNER JOIN Departamento ON Empregado.DepNum = Departamento.DepNum GROUP BY Departamento.Nome
+35. SELECT Departamento.Nome, AVG(Salario) AS SalarioMedio, MIN(Salario) AS SalarioMinimo, MAX(Salario) AS SalarioMaximo FROM Departamento INNER JOIN Empregado ON Departamento.DepNum = Empregado.DepNum GROUP BY Departamento.Nome
+36. SELECT Departamento.Nome, AVG(Salario) AS SalarioMedio, MIN(Salario) AS SalarioMinimo, MAX(Salario) AS SalarioMaximo FROM Departamento INNER JOIN Empregado ON Departamento.DepNum = Empregado.DepNum GROUP BY Departamento.Nome ORDER BY AVG(Salario) DESC
+37. SELECT Departamento.Nome, COUNT(Empregado.EmpNum) AS NumeroEmpregados FROM Empregado INNER JOIN Departamento ON Empregado.DepNum = Departamento.DepNum GROUP BY Departamento.Nome HAVING COUNT(Empregado.EmpNum) >= 2
+38. SELECT Departamento.Nome, COUNT(Empregado.EmpNum) AS NumeroEmpregados FROM Empregado INNER JOIN Departamento ON Empregado.DepNum = Departamento.DepNum GROUP BY Departamento.Nome HAVING COUNT(Empregado.EmpNum) >= 2 ORDER BY COUNT(Empregado.EmpNum) DESC
+39. SELECT Nome FROM Departamento WHERE DepNum IN (SELECT DepNum FROM Empregado WHERE Salario > (SELECT AVG(Salario) FROM Empregado)) GROUP BY Departamento.Nome
+40. SELECT AVG(Salario) AS SalarioMedio FROM Empregado WHERE DepNum IN (SELECT DepNum FROM Empregado WHERE Categoria = 'Programador') GROUP BY DepNum
+41. SELECT AVG(Salario) AS SalarioMedio FROM Empregado WHERE DepNum IN (SELECT DepNum FROM Empregado WHERE Categoria = 'Programador') GROUP BY DepNum
+42. SELECT Nome FROM Departamento WHERE DepNum IN (SELECT DepNum FROM Empregado WHERE Salario > (SELECT AVG(Salario) FROM Empregado WHERE DepNum IN (SELECT DepNum FROM Empregado WHERE Categoria = 'Programador'))) GROUP BY Nome
+43. (versão 1, só nome)
+    SELECT NomeEmpregado.Nome FROM (SELECT Nome, COUNT(*) AS NumeroProjectos FROM Empregado, Atribuicao WHERE Empregado.EmpNum = Atribuicao.EmpNum GROUP BY Empregado.EmpNum, Nome) AS NomeEmpregado WHERE NomeEmpregado.Nome.NumeroProjectos = (SELECT TOP 1 COUNT(*) AS NumeroProjectos FROM Empregado, Atribuicao WHERE Empregado.EmpNum = Atribuicao.EmpNum GROUP BY Empregado.EmpNum, Nome ORDER BY COUNT(*) DESC)
+    (versão 2, nome e número de projeto)
+    SELECT * FROM (SELECT Empregado.Nome, COUNT(*) AS NumeroProjectos FROM Empregado, Atribuicao WHERE Empregado.EmpNum = Atribuicao.EmpNum GROUP BY Empregado.Nome) AS NomeEmpregado WHERE NomeEmpregado.NumeroProjectos = (SELECT MAX(MaximoProjectos.NumeroProjectos FROM (SELECT COUNT(*) AS NumeroProjectos FROM Atribuicao GROUP BY EmpNum) AS MaximoProjectos))
+44. SELECT DepNum, COUNT(DISTINCT Categoria) FROM Empregado GROUP BY DepNum ORDER BY COUNT(DISTINCT Categoria) DESC
